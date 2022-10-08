@@ -1,5 +1,4 @@
 import json
-import os
 import socket
 import uuid
 from threading import Thread, Lock
@@ -91,20 +90,19 @@ class SocketServer:
                             stack_response = requests.get("http://169.254.169.254/latest/meta-data/tags/instance/aws:cloudformation:stack-name")
                             document_respone = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
                             if stack_response.status_code == 200 and document_respone.status_code == 200:
-                                stack_id = stack_response.text
+                                stack_name = stack_response.text
                                 document = document_respone.json()
                                 events = boto3.client('events', document["region"])
                                 response = events.put_events(
                                     Entries=[
                                         {
                                             'DetailType': 'Standby join attempt',
-                                            'Source': f'aws.ec2',
+                                            'Source': f'mc.{stack_name}',
                                             'Resources': [
                                                 f'arn:aws:ec2:{document["region"]}:{document["accountId"]}:instance/{document["instanceId"]}'
                                             ],
                                             'Detail': json.dumps({
                                                 'instance-id': document["instanceId"],
-                                                'stack': stack_id,
                                                 'client': client_ip
                                             })
                                         }
