@@ -1,0 +1,14 @@
+[Unit]
+Description=Fake minecraft server
+Wants=network-pre.target
+After=network-pre.target NetworkManager.service systemd-resolved.service
+
+[Service]
+ExecStart=/usr/sbin/python3.7 /opt/minecraft-standby/main.py
+ExecStopPost=/usr/sbin/tailscaled --cleanup
+
+Restart=on-failure
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

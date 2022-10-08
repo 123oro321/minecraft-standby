@@ -1,0 +1,25 @@
+{
+    "ip": "0.0.0.0",
+    "kick_message": [
+        "§bSuccess!",
+        "",
+        "§aServer will start now! Please wait few minutes."
+    ],
+    "motd": {
+        "1": "§4Sever in standby!",
+        "2": "§aAttempt login to startup"
+    },
+    "player_max": 0,
+    "player_online": 0,
+    "port": 25565,
+    "protocol": 2,
+    "samples": [
+        "§bOi m8",
+        "",
+        "§4SOMEBODY TOUCHA MY SPAGHET"
+    ],
+    "server_icon": "server_icon.png",
+    "show_hostname_if_available": true,
+    "show_ip_if_hostname_available": true,
+    "version_text": "§4Standby"
+}
