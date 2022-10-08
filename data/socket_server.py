@@ -93,7 +93,7 @@ class SocketServer:
                             if stack_response.status_code == 200 and document_respone.status_code == 200:
                                 stack_id = stack_response.text
                                 document = document_respone.json()
-                                events = boto3.client('events', os.environ['REGION'])
+                                events = boto3.client('events', document["region"])
                                 response = events.put_events(
                                     Entries=[
                                         {
