@@ -23,8 +23,8 @@ def main():
     logger.addHandler(console_handler)
     if os.path.exists("config.json"):
         logger.info("Loading configuration...")
-        with open("config.json", 'r') as file:
-            configuration = json.load(file)
+        with open("config.json", 'r', encoding='windows-1255') as file:
+            configuration = json.load(file,)
 
         ip = configuration["ip"]
         port = configuration["port"]
@@ -37,7 +37,7 @@ def main():
         except KeyError:
             configuration["show_hostname_if_available"] = True
             show_hostname = True
-            with open("config.json", 'w') as file:
+            with open("config.json", 'w', encoding='windows-1255') as file:
                 json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
 
         player_max = configuration.get("player_max", 0)
@@ -82,7 +82,7 @@ def main():
         configuration["player_max"] = 0
         configuration["player_online"] = 0
 
-        with open("config.json", 'w') as file:
+        with open("config.json", 'w', encoding='windows-1255') as file:
             json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
         logger.info("Please adjust the settings in the config.json!")
         exit(1)
