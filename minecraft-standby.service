@@ -4,8 +4,7 @@ Wants=network-pre.target
 After=network-pre.target NetworkManager.service systemd-resolved.service
 
 [Service]
-ExecStart=/usr/sbin/python3.7 /opt/minecraft-standby/main.py
-ExecStopPost=/usr/sbin/tailscaled --cleanup
+ExecStart=/usr/bin/python3 /opt/minecraft-standby/main.py
 WorkingDirectory=/opt/minecraft-standby
 
 Restart=on-failure
