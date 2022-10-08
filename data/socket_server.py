@@ -55,19 +55,25 @@ class SocketServer:
                 if state == 1:
                     self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
                                       "ping packet (%s:%s).") % (client_ip, addr[1], ip, port))
-                    motd = {}
-                    motd["version"] = {}
-                    motd["version"]["name"] = self.version_text
-                    motd["version"]["protocol"] = self.protocol
-                    motd["players"] = {}
-                    motd["players"]["max"] = self.player_max
-                    motd["players"]["online"] = self.player_online
-                    motd["players"]["sample"] = []
-
-                    for sample in self.samples:
-                        motd["players"]["sample"].append({"name": sample, "id": str(uuid.uuid4())})
-
-                    motd["description"] = {"text": self.motd}
+                    motd = {
+                        "version": {
+                            "name": self.version_text,
+                            "protocol": self.protocol,
+                        },
+                        "players": {
+                            "max": self.player_max,
+                            "online": self.player_online,
+                            "sample": [
+                                {
+                                    "name": sample,
+                                    "id": str(uuid.uuid4())
+                                } for sample in self.samples
+                            ]
+                        },
+                        "description": {
+                            "text": self.motd
+                        }
+                    }
 
                     if self.server_icon and len(self.server_icon) > 0:
                         motd["favicon"] = self.server_icon
@@ -84,36 +90,36 @@ class SocketServer:
                          ("(using ForgeModLoader) " if is_using_fml else "") + "(%s:%s).")
                         % (client_ip, addr[1], ip, port))
                     self.write_response(client_socket, json.dumps({"text": self.kick_message}))
-                    with self.lock:
-                        if not self.starting:
-                            self.starting = True
-                            stack_response = requests.get("http://169.254.169.254/latest/meta-data/tags/instance/aws:cloudformation:stack-name")
-                            document_respone = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
-                            if stack_response.status_code == 200 and document_respone.status_code == 200:
-                                stack_name = stack_response.text
-                                document = document_respone.json()
-                                events = boto3.client('events', document["region"])
-                                response = events.put_events(
-                                    Entries=[
-                                        {
-                                            'DetailType': 'Standby join attempt',
-                                            'Source': f'mc.{stack_name}',
-                                            'Resources': [
-                                                f'arn:aws:ec2:{document["region"]}:{document["accountId"]}:instance/{document["instanceId"]}'
-                                            ],
-                                            'Detail': json.dumps({
-                                                'instance-id': document["instanceId"],
-                                                'client': client_ip
-                                            })
-                                        }
-                                    ]
-                                )
-                                self.logger.info(response)
-                                self.kick_message = "§bServer is already starting!\n§bPlease wait few minutes"
-                                self.version_text = "Starting"
-                                self.motd = "§4Sever in starting!\n§aPlease wait patiently"
-                            else:
-                                self.logger.error("Instance metadata could not be retrieved!")
+                    # with self.lock:
+                    #     if not self.starting:
+                    #         self.starting = True
+                    #         stack_response = requests.get("http://169.254.169.254/latest/meta-data/tags/instance/aws:cloudformation:stack-name")
+                    #         document_respone = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
+                    #         if stack_response.status_code == 200 and document_respone.status_code == 200:
+                    #             stack_name = stack_response.text
+                    #             document = document_respone.json()
+                    #             events = boto3.client('events', document["region"])
+                    #             response = events.put_events(
+                    #                 Entries=[
+                    #                     {
+                    #                         'DetailType': 'Standby join attempt',
+                    #                         'Source': f'mc.{stack_name}',
+                    #                         'Resources': [
+                    #                             f'arn:aws:ec2:{document["region"]}:{document["accountId"]}:instance/{document["instanceId"]}'
+                    #                         ],
+                    #                         'Detail': json.dumps({
+                    #                             'instance-id': document["instanceId"],
+                    #                             'client': client_ip
+                    #                         })
+                    #                     }
+                    #                 ]
+                    #             )
+                    #             self.logger.info(response)
+                    #             self.kick_message = "§bServer is already starting!\n§bPlease wait few minutes"
+                    #             self.version_text = "Starting"
+                    #             self.motd = "§4Sever in starting!\n§aPlease wait patiently"
+                    #         else:
+                    #             self.logger.error("Instance metadata could not be retrieved!")
                 else:
                     self.logger.info(
                         "[%s:%d] Tried to request a login/ping with an unknown state: %d" % (client_ip, addr[1], state))

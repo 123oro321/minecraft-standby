@@ -7,7 +7,7 @@ import json
 import os.path
 
 from socket_server import SocketServer
-from systemd.journal import JournaldLogHandler
+# from systemd.journal import JournaldLogHandler
 
 server = None
 
@@ -72,20 +72,22 @@ def main():
             logger.exception(e)
     else:
         logger.warning("No configuration file found. Creating config.json...")
-        configuration = {}
-        configuration["ip"] = "0.0.0.0"
-        configuration["port"] = 25565
-        configuration["protocol"] = 2
-        configuration["motd"] = {}
-        configuration["motd"]["1"] = "§4Maintenance!"
-        configuration["motd"]["2"] = "§aCheck example.com for more information!"
-        configuration["version_text"] = "§4Maintenance"
-        configuration["kick_message"] = ["§bSorry", "", "§aThis server is offline!"]
-        configuration["server_icon"] = "server_icon.png"
-        configuration["samples"] = ["§bexample.com", "", "§4Maintenance"]
-        configuration["show_ip_if_hostname_available"] = True
-        configuration["player_max"] = 0
-        configuration["player_online"] = 0
+        configuration = {
+            "ip": "0.0.0.0",
+            "port": 25565,
+            "protocol": 2,
+            "motd": {
+                "1": "§4Maintenance!",
+                "2": "§aCheck example.com for more information!",
+            },
+            "version_text": "§4Maintenance",
+            "kick_message": ["§bSorry", "", "§aThis server is offline!"],
+            "server_icon": "server_icon.png",
+            "samples": ["§bexample.com", "", "§4Maintenance"],
+            "show_ip_if_hostname_available": True,
+            "player_max": 0,
+            "player_online": 0
+        }
 
         with open("config.json", 'w', encoding='windows-1255') as file:
             json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
