@@ -7,7 +7,7 @@ import json
 import os.path
 
 from socket_server import SocketServer
-# from systemd.journal import JournaldLogHandler
+from systemd.journal import JournaldLogHandler
 
 server = None
 
