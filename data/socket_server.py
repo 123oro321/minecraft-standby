@@ -1,4 +1,5 @@
 import json
+import signal
 import socket
 import uuid
 from threading import Thread, Lock
@@ -6,6 +7,16 @@ import boto3
 import requests
 
 import byte_utils
+
+
+def write_response(client_socket, response):
+    response_array = bytearray()
+    byte_utils.write_varint(response_array, 0)
+    byte_utils.write_utf(response_array, response)
+    length = bytearray()
+    byte_utils.write_varint(length, len(response_array))
+    client_socket.sendall(length)
+    client_socket.sendall(response_array)
 
 
 class SocketServer:
@@ -25,6 +36,7 @@ class SocketServer:
         self.protocol = protocol
         self.lock = Lock()
         self.starting = False
+        self.killer = GracefulKiller()
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
@@ -78,7 +90,7 @@ class SocketServer:
                     if self.server_icon and len(self.server_icon) > 0:
                         motd["favicon"] = self.server_icon
 
-                    self.write_response(client_socket, json.dumps(motd))
+                    write_response(client_socket, json.dumps(motd))
                 elif state == 2:
                     name = ""
                     if len(data) != i:
@@ -89,7 +101,7 @@ class SocketServer:
                         ("[%s:%s] " + (name + " t" if len(name) > 0 else "T") + "ries to connect to the server " +
                          ("(using ForgeModLoader) " if is_using_fml else "") + "(%s:%s).")
                         % (client_ip, addr[1], ip, port))
-                    self.write_response(client_socket, json.dumps({"text": self.kick_message}))
+                    write_response(client_socket, json.dumps({"text": self.kick_message}))
                     with self.lock:
                         if not self.starting:
                             self.starting = True
@@ -103,11 +115,12 @@ class SocketServer:
                                     Entries=[
                                         {
                                             'DetailType': 'Standby join attempt',
-                                            'Source': f'mc.{stack_name}',
+                                            'Source': 'oros.mcs',
                                             'Resources': [
                                                 f'arn:aws:ec2:{document["region"]}:{document["accountId"]}:instance/{document["instanceId"]}'
                                             ],
                                             'Detail': json.dumps({
+                                                'stack': stack_name,
                                                 'instance-id': document["instanceId"],
                                                 'client': client_ip
                                             })
@@ -128,7 +141,7 @@ class SocketServer:
                 response = bytearray()
                 byte_utils.write_varint(response, 9)
                 byte_utils.write_varint(response, 1)
-                bytearray.append(long)
+                response.append(long)
                 client_socket.sendall(bytearray)
                 self.logger.info("[%s:%d] Responded with pong packet." % (client_ip, addr[1]))
             else:
@@ -137,24 +150,26 @@ class SocketServer:
             self.logger.warning("[%s:%s] Received invalid data (%s)" % (client_ip, addr[1], data))
             return
 
-    def write_response(self, client_socket, response):
-        response_array = bytearray()
-        byte_utils.write_varint(response_array, 0)
-        byte_utils.write_utf(response_array, response)
-        length = bytearray()
-        byte_utils.write_varint(length, len(response_array))
-        client_socket.sendall(length)
-        client_socket.sendall(response_array)
-
     def start(self):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.ip, self.port))
-        self.sock.settimeout(5000)
+        self.sock.settimeout(5)
         self.sock.listen(30)
         self.logger.info("Server started on %s:%s! Waiting for incoming connections..." % (self.ip, self.port))
-        while 1:
+        while not self.killer.kill_now:
             (client, address) = self.sock.accept()
             Thread(target=self.on_new_client, daemon=True, args=(client, address,)).start()
 
     def close(self):
         self.sock.close()
+
+
+class GracefulKiller:
+    kill_now = False
+
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+    def exit_gracefully(self, *_):
+        self.kill_now = True

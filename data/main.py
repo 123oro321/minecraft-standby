@@ -4,10 +4,10 @@
 import logging
 import base64
 import json
-import os.path
+from pathlib import Path
 
 from socket_server import SocketServer
-from systemd.journal import JournaldLogHandler
+# from systemd.journal import JournaldLogHandler
 
 
 def main():
@@ -15,14 +15,14 @@ def main():
     logger.setLevel(logging.INFO)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    journal_handler = JournaldLogHandler()
-    journal_handler.setLevel(logging.INFO)
+    # journal_handler = JournaldLogHandler()
+    # journal_handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
-    journal_handler.setFormatter(formatter)
+    # journal_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-    logger.addHandler(journal_handler)
-    if os.path.exists("standby.json"):
+    # logger.addHandler(journal_handler)
+    if Path("standby.json").exists():
         logger.info("Loading configuration...")
         with open("standby.json", 'r', encoding='windows-1255') as file:
             configuration = json.load(file,)
@@ -39,7 +39,7 @@ def main():
         protocol = configuration.get("protocol", 2)
         kick_message = "\n".join(configuration["kick_message"])
 
-        if not os.path.exists(configuration["server_icon"]):
+        if not Path(configuration["server_icon"]).exists():
             logger.warning("Server icon doesn't exists - submitting none...")
             server_icon = None
         else:
