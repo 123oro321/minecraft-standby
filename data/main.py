@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from socket_server import SocketServer
-# from systemd.journal import JournaldLogHandler
+from systemd.journal import JournaldLogHandler
 
 
 def main():
