@@ -15,13 +15,13 @@ def main():
     logger.setLevel(logging.INFO)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
-    # journal_handler = JournaldLogHandler()
-    # journal_handler.setLevel(logging.INFO)
+    journal_handler = JournaldLogHandler()
+    journal_handler.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(formatter)
-    # journal_handler.setFormatter(formatter)
+    journal_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
-    # logger.addHandler(journal_handler)
+    logger.addHandler(journal_handler)
     if Path("standby.json").exists():
         logger.info("Loading configuration...")
         with open("standby.json", 'r', encoding='windows-1255') as file:
